@@ -3,6 +3,12 @@ const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const app = express();
+const { JSDOM } = require("jsdom");
+const createDOMPurify = require("dompurify");
+const { EMPTY } = require('sqlite3');
+
+const window = new JSDOM("").window;
+const DOMPurify = createDOMPurify(window);
 
 const db = new sqlite3.Database(':memory:');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -17,8 +23,12 @@ db.serialize(() => {
 
 // Middleware para gerar cookie de sessão
 app.use((req, res, next) => {
-    if (!req.cookies.session_id) {
-        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: false }); // VULNERÁVEL A XSS 🚨
+    if (!req.cookies.session_id) { // Definindo para o token não ser exibido!
+        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Strict'
+        });
     }
     next();
 });
@@ -36,7 +46,11 @@ app.get('/', (req, res) => {
 // Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
 app.post('/comment', (req, res) => {
     const { content } = req.body;
-    db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
+    console.log(content);
+    const comentarioPurificado = DOMPurify.sanitize(content); // Sanitizando o comentário malicioso
+    console.log(typeof(comentarioPurificado))
+    console.log("Comentário purificado:", comentarioPurificado)
+    db.run("INSERT INTO comments (content) VALUES (?)", [comentarioPurificado], (err) => {
         if (err) {
             return res.send('Erro ao salvar comentário');
         }
