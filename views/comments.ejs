@@ -51,13 +51,20 @@
     <div class="container">
         <h2>Deixe um comentário</h2>
         <form action="/comment" method="POST">
-            <textarea name="content" required></textarea>
+            <!-- CORREÇÃO FRONTEND: Limitação no próprio HTML -->
+            <!-- maxlength="500": Impede entrada de textos muito longos -->
+            <!-- placeholder: Informa ao usuário sobre a limitação -->
+            <textarea name="content" required maxlength="500" placeholder="Digite seu comentário (máximo 500 caracteres)"></textarea>
             <button type="submit">Enviar</button>
         </form>
         <div class="comments">
             <h3>Comentários:</h3>
             <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS -->
+                <!-- CORREÇÃO CRÍTICA: Mudança de <%- para <%= -->
+                <!-- <%- comment.content %>: VULNERÁVEL - Renderiza HTML sem escape -->
+                <!-- <%= comment.content %>: SEGURO - Faz escape automático de HTML -->
+                <!-- Exemplo: <script> vira &lt;script&gt; (texto visível, não executável) -->
+                <p><%= comment.content %></p> <!-- CORRIGIDO: Agora usa escape automático -->
             <% }); %>
         </div>
     </div>
