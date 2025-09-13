@@ -2,12 +2,25 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const validator = require('validator');
 const app = express();
 
 const db = new sqlite3.Database(':memory:');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
+
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+    }
+}))
 
 // Criar tabela de comentários vulnerável
 db.serialize(() => {
@@ -18,7 +31,11 @@ db.serialize(() => {
 // Middleware para gerar cookie de sessão
 app.use((req, res, next) => {
     if (!req.cookies.session_id) {
-        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: false }); // VULNERÁVEL A XSS 🚨
+        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { 
+            httpOnly: true,
+            secure: false,
+            sameSite: 'strict'
+         });
     }
     next();
 });
@@ -33,10 +50,21 @@ app.get('/', (req, res) => {
     });
 });
 
-// Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
+// Rota para enviar comentários
 app.post('/comment', (req, res) => {
     const { content } = req.body;
-    db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
+
+    if (!content || typeof content !== 'string') {
+        return res.status(400).send('Conteúdo inválido');
+    }
+
+    const sanitizedContent = validator.escape(content);
+
+    if (sanitizedContent.length> 500) {
+        return res.send(400).send('Comentário muito longo');
+    }
+
+    db.run("INSERT INTO comments (content) VALUES (?)", [sanitizedContent], (err) => {
         if (err) {
             return res.send('Erro ao salvar comentário');
         }
