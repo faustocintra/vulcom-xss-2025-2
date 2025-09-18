@@ -56,10 +56,17 @@
         </form>
         <div class="comments">
             <h3>Comentários:</h3>
-            <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS -->
-            <% }); %>
+            <% if (comments && comments.length > 0) { %> <!-- Verifica se existe a variável comments e há ao menos um comentário no array-->
+
+                <% comments.forEach(comment => { %> <!--Faz um loop em cada comentário existente-->
+                    <!-- Usar EJS-escape para evitar XSS -->
+                    <p><%= comment.content %></p>
+                <% }) %>
+            <% } else { %>
+                <p>Sem comentários ainda.</p>
+            <% } %>
         </div>
     </div>
 </body>
 </html>
+
