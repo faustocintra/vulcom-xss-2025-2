@@ -57,9 +57,27 @@
         <div class="comments">
             <h3>Comentários:</h3>
             <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS -->
+                <!-- 
+                  A linha vulnerável foi substituída.
+                  <p><%- comment.content %></p>  <-- VULNERÁVEL 🚨: Renderiza HTML e executa scripts.
+                -->
+                <p><%= comment.content %></p> <!-- CORRIGIDO ✅: Escapa o HTML, tratando-o como texto. -->
             <% }); %>
         </div>
     </div>
 </body>
 </html>
+
+<!-- O front-end era o ponto onde a vulnerabilidade de XSS se manifestava, 
+executando no navegador do usuário o conteúdo malicioso que foi salvo no banco de dados.
+
+A tag EJS usada para exibir o conteúdo dos comentários foi trocada de <%- comment.content %> para <%= comment.content %>.
+
+Vulnerabilidade Corrigida: Stored Cross-Site Scripting (XSS). A tag <%- %> interpreta e renderiza qualquer HTML ou 
+tag script presente no conteúdo do comentário. Isso permitia que um invasor salvasse um script no banco de dados, 
+que seria executado no navegador de todos os usuários que visualizassem a página.
+
+Impacto da Correção: A tag <%= %> realiza o escape de caracteres especiais de HTML 
+(por exemplo, transformando < em &lt; e > em &gt;). Como resultado, qualquer script malicioso é tratado 
+como texto simples e exibido de forma inofensiva na tela, em vez de ser executado pelo navegador. 
+Esta alteração neutraliza diretamente a vulnerabilidade de XSS, que era a falha principal da aplicação. -->
