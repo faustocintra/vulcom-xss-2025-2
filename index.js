@@ -2,9 +2,16 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const sanitizeHtml = require('sanitize-html');
 const app = express();
 
 const db = new sqlite3.Database(':memory:');
+
+// Middleware para adicionar Content Security Policy (CSP)
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline';");
+    next();
+});
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
@@ -16,9 +23,10 @@ db.serialize(() => {
 });
 
 // Middleware para gerar cookie de sessão
+// Middleware para gerar cookie de sessão seguro
 app.use((req, res, next) => {
     if (!req.cookies.session_id) {
-        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: false }); // VULNERÁVEL A XSS 🚨
+        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: true }); // Corrigido: HttpOnly
     }
     next();
 });
@@ -34,8 +42,10 @@ app.get('/', (req, res) => {
 });
 
 // Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
+// Rota para enviar comentários (com sanitização contra XSS)
 app.post('/comment', (req, res) => {
-    const { content } = req.body;
+    // Sanitiza o comentário antes de salvar
+    const content = sanitizeHtml(req.body.content);
     db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
         if (err) {
             return res.send('Erro ao salvar comentário');
