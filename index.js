@@ -2,11 +2,14 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const sanitizeHtml = require('sanitize-html');
+const helmet = require('helmet');
 const app = express();
 
 const db = new sqlite3.Database(':memory:');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(helmet()); // Adiciona cabeçalhos de segurança
 app.set('view engine', 'ejs');
 
 // Criar tabela de comentários vulnerável
@@ -35,7 +38,21 @@ app.get('/', (req, res) => {
 
 // Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
 app.post('/comment', (req, res) => {
-    const { content } = req.body;
+    let { content } = req.body;
+    // Validar tipo e tamanho da entrada
+    if (typeof content !== 'string' || content.length > 500) {
+        return res.send('Comentário inválido.');
+    }
+    // Permitir apenas caracteres alfanuméricos e pontuação básica
+    const regex = /^[\w\s.,!?@#\$%&*()\-+=:;\/'"áéíóúãõâêîôûçÁÉÍÓÚÃÕÂÊÎÔÛÇ]+$/i;
+    if (!regex.test(content)) {
+        return res.send('Comentário contém caracteres não permitidos.');
+    }
+    // Sanitizar entrada do usuário
+    content = sanitizeHtml(content, {
+        allowedTags: [], // Remove todas as tags HTML
+        allowedAttributes: {}
+    });
     db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
         if (err) {
             return res.send('Erro ao salvar comentário');
