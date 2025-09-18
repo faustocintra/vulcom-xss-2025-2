@@ -9,8 +9,10 @@
   "dependencies": {
     "body-parser": "latest",
     "cookie-parser": "^1.4.7",
+    "dompurify": "^3.0.5",
     "ejs": "latest",
     "express": "latest",
+    "jsdom": "^23.0.1",
     "sqlite3": "latest"
   },
   "devDependencies": {
