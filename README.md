@@ -68,3 +68,21 @@ Modifique o código para **corrigir a vulnerabilidade**! Algumas técnicas inclu
 ---
 
 💡 **Dica:** Teste diferentes abordagens de ataque e tente explorar outras vulnerabilidades no código! Boa sorte! 🚀
+
+---
+
+### 🛡️ Solução Implementada
+
+Para corrigir as vulnerabilidades de segurança, aplicamos três camadas de defesa em série:
+
+1.  **Escape de Saída no Template (EJS)**
+    -   **O que foi feito:** No arquivo `views/comments.ejs`, a tag de renderização de conteúdo foi alterada de `<%- comment.content %>` para `<%= comment.content %>`.
+    -   **Por quê:** A tag `<%= %>` realiza o "escape" de HTML, convertendo caracteres especiais (como `<` e `>`) em suas entidades equivalentes (ex: `&lt;` e `&gt;`). Isso faz com que qualquer script injetado seja renderizado como texto inofensivo na página, em vez de ser executado pelo navegador. Esta é a defesa primária contra XSS.
+
+2.  **Flag `HttpOnly` nos Cookies**
+    -   **O que foi feito:** No arquivo `index.js`, ao criar o cookie de sessão, a opção `httpOnly: true` foi definida.
+    -   **Por quê:** Esta flag instrui o navegador a nunca permitir que o cookie seja acessado por JavaScript do lado do cliente (`document.cookie`). Isso mitiga ataques de roubo de sessão, pois mesmo que um invasor consiga executar um script, ele não será capaz de ler o cookie da sessão.
+
+3.  **Política de Segurança de Conteúdo (CSP)**
+    -   **O que foi feito:** Utilizando a biblioteca `helmet`, um cabeçalho `Content-Security-Policy` foi adicionado a todas as respostas do servidor. A política configurada foi `script-src 'self'; style-src 'self' 'unsafe-inline'`.
+    -   **Por quê:** A CSP funciona como uma lista de permissões, instruindo o navegador sobre quais fontes de conteúdo são confiáveis. Com essa política, o navegador só executará scripts vindos do próprio domínio (`'self'`) e bloqueará todos os scripts embutidos (inline) ou de fontes externas, fornecendo uma camada de defesa robusta contra a execução de código malicioso.
