@@ -2,12 +2,18 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const DOMPurify = require('dompurify');
 const app = express();
 
 const db = new sqlite3.Database(':memory:');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
+
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'");
+    next();
+});
 
 // Criar tabela de comentários vulnerável
 db.serialize(() => {
@@ -18,7 +24,7 @@ db.serialize(() => {
 // Middleware para gerar cookie de sessão
 app.use((req, res, next) => {
     if (!req.cookies.session_id) {
-        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: false }); // VULNERÁVEL A XSS 🚨
+        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: true });
     }
     next();
 });
@@ -36,7 +42,11 @@ app.get('/', (req, res) => {
 // Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
 app.post('/comment', (req, res) => {
     const { content } = req.body;
-    db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
+    if (!content || content.length > 500 || /<script/i.test(content)) {
+        return res.send('Comentário inválido');
+    }
+    const sanitizedContent = DOMPurify.sanitize(content);
+    db.run("INSERT INTO comments (content) VALUES (?)", [sanitizedContent], (err) => {
         if (err) {
             return res.send('Erro ao salvar comentário');
         }
