@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser'); 
 const helmet = require('helmet'); // helmet adiciona vários headers HTTP de segurança automaticamente
 const sanitizeHtml = require('sanitize-html'); // Biblioteca que remove/filtra tags e atributos perigososs em HTML fornecido por usuários.
-const crypto=require('crypto'); //Módulo nativo do Node.js para oprações cripptográficas (gerar IDs)
+const crypto=require('crypto'); //Módulo nativo do Node.js para operações criptográficas (gerar IDs)
 const app = express();
 
 const db = new sqlite3.Database(':memory:');
