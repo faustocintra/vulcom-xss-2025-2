@@ -51,13 +51,15 @@
     <div class="container">
         <h2>Deixe um comentário</h2>
         <form action="/comment" method="POST">
-            <textarea name="content" required></textarea>
+            <!-- LIMITAÇÃO DE CARACTERES NO TEXTAREA PARA 350 CARACTERES -->
+            <textarea name="content" maxlength="350" placeholder="Escreva seu comentário (max 350 caracteres)" required></textarea>
             <button type="submit">Enviar</button>
         </form>
         <div class="comments">
             <h3>Comentários:</h3>
             <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS -->
+                <!-- Alteração do scape para fazer escape automático -->
+                <p><%= comment.content %></p> 
             <% }); %>
         </div>
     </div>
