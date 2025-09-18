@@ -17,10 +17,29 @@ app.use(helmet.contentSecurityPolicy({
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
         objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+        childSrc: ["'none'"],
+        workerSrc: ["'none'"],
         upgradeInsecureRequests: [],
-    }
+    },
+    reportOnly: false
 }))
+
+app.use(helmet({
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: false
+}))
+
+app.use((req, res, next) => {
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    next();
+});
 
 // Criar tabela de comentários vulnerável
 db.serialize(() => {
@@ -34,7 +53,9 @@ app.use((req, res, next) => {
         res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { 
             httpOnly: true,
             secure: false,
-            sameSite: 'strict'
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000,
+            path: '/'
          });
     }
     next();
@@ -58,10 +79,18 @@ app.post('/comment', (req, res) => {
         return res.status(400).send('Conteúdo inválido');
     }
 
-    const sanitizedContent = validator.escape(content);
+    let sanitizedContent = content.trim();
 
-    if (sanitizedContent.length> 500) {
-        return res.send(400).send('Comentário muito longo');
+    sanitizedContent = sanitizedContent
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+\s*=/gi, '');
+
+    sanitizedContent = validator.escape(sanitizedContent);
+
+    if (sanitizedContent.length > 500) {
+        return res.status(400).send("Comentário muito longo");
     }
 
     db.run("INSERT INTO comments (content) VALUES (?)", [sanitizedContent], (err) => {
