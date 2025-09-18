@@ -12,6 +12,7 @@
     "dompurify": "^3.2.6",
     "ejs": "latest",
     "express": "latest",
+    "helmet": "^8.1.0",
     "jsdom": "^27.0.0",
     "sqlite3": "latest"
   },

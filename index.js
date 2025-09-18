@@ -19,11 +19,16 @@
 
 // 5. No EJS (front-end) utilizei o escape automático: <%= comment.content %> para evitar ataques XSS e limitei a quantidade de caracteres.
 
+// 6. Content Security Policy (CSP):
+// - Uso do Helmet para configurar a CSP. Isso impede que scripts injetados
+//   (inline ou externos não autorizados) sejam executados pelo navegador.
+
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const app = express();
+const helmet = require('helmet');
 
 const createDOMPurify = require('dompurify'); // Importa o DOMPurify
 const { JSDOM } = require('jsdom'); // Importa o JSDOM
@@ -36,6 +41,19 @@ const db = new sqlite3.Database(':memory:');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
+
+// Configuração do Helmet com CSP
+app.use(
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      defaultSrc: ["'self'"], // só permite conteúdo do mesmo domínio
+      scriptSrc: ["'self'"], // só scripts locais, bloqueia inline e externos
+      objectSrc: ["'none'"], // bloqueia Flash, Silverlight etc
+      upgradeInsecureRequests: [], // força HTTPS se disponível
+    },
+  })
+);
 
 // Criar tabela de comentários vulnerável
 db.serialize(() => {
@@ -65,7 +83,6 @@ app.get('/', (req, res) => {
     });
 });
 
-// Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
 app.post('/comment', (req, res) => {
     const { content } = req.body;
 
