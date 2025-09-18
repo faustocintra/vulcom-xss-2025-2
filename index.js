@@ -18,7 +18,11 @@ db.serialize(() => {
 // Middleware para gerar cookie de sessão
 app.use((req, res, next) => {
     if (!req.cookies.session_id) {
-        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: false }); // VULNERÁVEL A XSS 🚨
+        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: true, secure: true }); // VULNERÁVEL A XSS 🚨
+
+    // 1 - transformar o httponly em true, para impedir acesso via javascript no navegador
+
+    // 2 - colocar secure em true, para permitir apenas conexões https
     }
     next();
 });
@@ -33,10 +37,15 @@ app.get('/', (req, res) => {
     });
 });
 
+const sanitize = (str) => str.replace(/<[^>]*>?/gm, '');
+// função para remover tags HTML do comentário
+
 // Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
 app.post('/comment', (req, res) => {
     const { content } = req.body;
-    db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
+    // função
+    const safeContent = sanitize(content);
+    db.run("INSERT INTO comments (content) VALUES (?)", [safeContent], (err) => {
         if (err) {
             return res.send('Erro ao salvar comentário');
         }

@@ -55,9 +55,10 @@
             <button type="submit">Enviar</button>
         </form>
         <div class="comments">
+            <!-- escapar html usando <% = %>-->
             <h3>Comentários:</h3>
-            <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS -->
+            <% comments.forEach(function(comment){ %>
+                <li><%= comment.content %></li>
             <% }); %>
         </div>
     </div>
