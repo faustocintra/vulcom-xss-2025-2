@@ -57,7 +57,7 @@
         <div class="comments">
             <h3>Comentários:</h3>
             <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS (pode ser resolvido com <%= %> tag com escape, porem usei DOMPurify)--> 
+                <p><%= comment.content %></p> <!-- VULNERÁVEL A XSS (pode ser resolvido com <%= %> tag com escape ou DOMPurify)--> 
             <% }); %>
         </div>
     </div>

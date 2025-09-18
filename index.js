@@ -1,7 +1,8 @@
-// Vulnerabilidades mitigadas com DOMPurify e Helmet (CSP)
+// Vulnerabilidades mitigadas com DOMPurify, Helmet (CSP) e escape HTML
 // 1. A aplicação agora utiliza DOMPurify para sanitizar o conteúdo dos comentários antes de armazená-los no banco de dados, prevenindo ataques XSS.
 // 2. A biblioteca Helmet foi adicionada para configurar políticas de segurança de conteúdo (CSP), ajudando a mitigar ataques XSS ao restringir as fontes de scripts.
 // 3. O cookie de sessão foi configurado com a flag HttpOnly, impedindo que scripts do lado do cliente acessem o cookie, mitigando o risco de roubo de sessão via XSS.
+// 4. A renderização dos comentários na página utiliza EJS, que escapa automaticamente o conteúdo, prevenindo a injeção de HTML malicioso.
 
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
