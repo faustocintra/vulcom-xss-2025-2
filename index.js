@@ -6,6 +6,12 @@ const sanitizeHtml = require('sanitize-html');
 const app = express();
 
 const db = new sqlite3.Database(':memory:');
+
+// Middleware para adicionar Content Security Policy (CSP)
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline';");
+    next();
+});
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
