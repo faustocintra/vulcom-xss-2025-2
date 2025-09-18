@@ -11,6 +11,7 @@
     "cookie-parser": "^1.4.7",
     "ejs": "latest",
     "express": "latest",
+    "helmet": "^8.1.0",
     "sqlite3": "latest"
   },
   "devDependencies": {

@@ -57,7 +57,8 @@
         <div class="comments">
             <h3>Comentários:</h3>
             <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS -->
+                <!--Solução de sanitização - trocar o "-" para "=" evita a renderização do conteúdo bruto, transformando <script> em &lt;script&gt -->
+                <p><%= comment.content %></p> <!-- vulnerabilidade a XSS corrigida com sanitização -->
             <% }); %>
         </div>
     </div>
