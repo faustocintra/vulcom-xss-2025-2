@@ -56,8 +56,8 @@
         </form>
         <div class="comments">
             <h3>Comentários:</h3>
-            <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS -->
+            <% comments.forEach(function(comment) { %>
+                <p><%= comment.content %></p>
             <% }); %>
         </div>
     </div>
