@@ -9,6 +9,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
 
+// Content Security Policy para bloquear scripts maliciosos
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';");
+    next();
+});
+
 // Criar tabela de comentários vulnerável
 db.serialize(() => {
     db.run("CREATE TABLE comments (id INTEGER PRIMARY KEY, content TEXT)");
@@ -18,7 +24,7 @@ db.serialize(() => {
 // Middleware para gerar cookie de sessão
 app.use((req, res, next) => {
     if (!req.cookies.session_id) {
-        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: false }); // VULNERÁVEL A XSS 🚨
+        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: true }); // CORRIGIDO: httpOnly: true
     }
     next();
 });
@@ -33,10 +39,22 @@ app.get('/', (req, res) => {
     });
 });
 
-// Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
+// Função para sanitizar entrada HTML
+function sanitizeHTML(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+}
+
+// Rota para enviar comentários (CORRIGIDO: sanitização aplicada)
 app.post('/comment', (req, res) => {
     const { content } = req.body;
-    db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
+    const sanitizedContent = sanitizeHTML(content); // Sanitizar entrada
+    db.run("INSERT INTO comments (content) VALUES (?)", [sanitizedContent], (err) => {
         if (err) {
             return res.send('Erro ao salvar comentário');
         }
