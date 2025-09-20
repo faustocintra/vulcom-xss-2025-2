@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- *** SOLUÇÃO XSS 2: Configuração de CSP (Content Security Policy) -->
+    <!-- meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" -->
     <title>Comentários</title>
     <style>
         body {
@@ -57,7 +59,9 @@
         <div class="comments">
             <h3>Comentários:</h3>
             <% comments.forEach(comment => { %>
-                <p><%- comment.content %></p> <!-- VULNERÁVEL A XSS -->
+                <!-- *** SOLUÇÃO XSS 4: Tag de escape EJS segura -->
+                <!-- <p><%- comment.content %></p> -->
+                <p><%= comment.content %></p>
             <% }); %>
         </div>
     </div>
