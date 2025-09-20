@@ -9,12 +9,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
 
-// *** SOLUÇÃO XSS 1: Importação e configuração do DOMPurify
-const createDOMPurify = require('dompurify')
-const { JSDOM } = require('jsdom')
-const window = new JSDOM('').window
-const DOMPurify = createDOMPurify(window)
-
 // Criar tabela de comentários vulnerável
 db.serialize(() => {
     db.run("CREATE TABLE comments (id INTEGER PRIMARY KEY, content TEXT)");
@@ -42,12 +36,9 @@ app.get('/', (req, res) => {
 // Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
 app.post('/comment', (req, res) => {
     const { content } = req.body;
-    //db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
-
-    // *** SOLUÇÃO XSS 1: Usando DOMPurify para sanitizar a entrada de usuário
     db.run(
         "INSERT INTO comments (content) VALUES (?)", 
-        [DOMPurify.sanitize(content)], 
+        [content], 
         (err) => {
             if (err) {
                 return res.send('Erro ao salvar comentário');
