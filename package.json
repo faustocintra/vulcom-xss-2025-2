@@ -9,7 +9,7 @@
   "dependencies": {
     "body-parser": "latest",
     "cookie-parser": "^1.4.7",
-    "dompurify": "^3.2.6",
+    "dompurify": "^3.2.7",
     "ejs": "latest",
     "express": "latest",
     "jsdom": "^27.0.0",
